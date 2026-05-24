@@ -12,7 +12,8 @@
     "url": "https://github.com/rhanka/mcp-hono/issues"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -24,13 +25,16 @@
     }
   },
   "bin": {
-    "mcp-hono": "./dist/cli.js"
+    "mcp-hono": "dist/cli.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsc && node scripts/build-playground.js",
+    "test": "node scripts/verify-playground-design-system.js && node scripts/verify-package-publishing.js",
+    "test:design": "node scripts/verify-playground-design-system.js",
+    "test:publish": "node scripts/verify-package-publishing.js",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
@@ -46,8 +50,5 @@
     "hono": "^4.0.0",
     "typescript": "^5.0.0",
     "zod": "^3.0.0"
-  },
-  "dependencies": {
-    "@sentropic/design-system-tokens": "^0.7.0"
   }
 }
