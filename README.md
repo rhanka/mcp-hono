@@ -14,6 +14,7 @@ Unlike standard MCP implementations (which act as heavy Node-only wrappers), `@s
 * **Edge-First & Serverless-Ready**: Runs anywhere Hono runs—Cloudflare Workers, Bun, Deno, Vercel, Node.js.
 * **Hono-Idiomatic Integration**: Mounts cleanly via `app.route('/mcp', mcpApp)`.
 * **Full Context Access (The Game-Changer)**: Direct access to Hono's `Context` (`c`) inside your tools. Seamlessly read environment bindings, request headers, database clients, or authentication data!
+* **OAuth Resource Server Built-In**: Protect MCP HTTP/SSE endpoints with Bearer tokens, publish protected-resource metadata, and expose validated auth context to handlers.
 * **Autonomic Type Safety**: Define schemas using `Zod` to automatically type and validate arguments.
 * **Premium Developer Playground**: Visiting your MCP endpoint in a browser (`GET /mcp`) renders a gorgeous, interactive dark-mode dashboard to test your tools in real-time.
 * **Stdio-to-HTTP dev bridge (`npx @sentropic/mcp-hono dev`)**: Simple local development bridge to hook your Hono server into local desktop clients (like Claude Desktop) without polluting your production code with Stdio logic.
@@ -122,6 +123,48 @@ Extends Hono's `Hono` class. Returns a router instance.
 * `options.name`: Name of the MCP server.
 * `options.version`: Version of the MCP server.
 * `options.description`: Description of the MCP server.
+* `options.oauth`: Optional OAuth Resource Server configuration.
+
+### OAuth Resource Server
+
+`@sentropic/mcp-hono` can act as an OAuth Resource Server. It validates `Authorization: Bearer <token>` through your identity provider hook, exposes protected-resource metadata at `/.well-known/oauth-protected-resource`, and makes the auth context available as `c.get('oauth')`.
+
+```typescript
+const myMcp = mcp({
+  name: 'Sentropic Hub',
+  version: '1.0.0',
+  oauth: {
+    issuer: 'https://auth.example.com',
+    authorizationServers: ['https://auth.example.com'],
+    resource: 'https://api.example.com/mcp',
+    requiredScopes: ['mcp:read'],
+    scopesSupported: ['mcp:read', 'mcp:write'],
+    validateToken: async (token, c) => {
+      const payload = await verifyAccessTokenWithYourIdP(token, c)
+
+      return payload
+        ? {
+            subject: payload.sub,
+            scopes: payload.scope,
+            audience: payload.aud,
+            issuer: payload.iss,
+            claims: payload,
+          }
+        : null
+    },
+  },
+})
+
+myMcp.tool({
+  name: 'whoami',
+  handler: (_args, c) => {
+    const auth = c.get('oauth')
+    return { subject: auth.subject, scopes: auth.scopes }
+  },
+})
+```
+
+Missing or invalid tokens receive `401` with a `WWW-Authenticate: Bearer` challenge. Tokens without the configured `requiredScopes` receive `403 insufficient_scope`.
 
 ### `.tool(options)`
 Registers a tool.

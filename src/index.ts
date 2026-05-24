@@ -18,4 +18,5 @@ export type {
 } from "./server.js";
 
 export * from "./types.js";
+export { getOAuthContext } from "./oauth.js";
 export { getPlaygroundHtml } from "./playground.js";

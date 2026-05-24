@@ -5,6 +5,8 @@
  * ensuring complete type safety and compliance with the official specification.
  */
 
+import type { Context } from "hono";
+
 // JSON-RPC 2.0 Basics
 export type JSONRPCId = string | number;
 
@@ -57,6 +59,51 @@ export interface McpHonoOptions {
   name: string;
   version: string;
   description?: string;
+  oauth?: OAuthResourceServerOptions;
+}
+
+export interface OAuthContext {
+  token: string;
+  subject?: string;
+  scopes: string[];
+  audience?: string | string[];
+  issuer?: string;
+  claims: Record<string, unknown>;
+}
+
+export interface OAuthTokenValidationResult {
+  subject?: string;
+  scopes?: string[] | string;
+  audience?: string | string[];
+  issuer?: string;
+  claims?: Record<string, unknown>;
+}
+
+export interface OAuthProtectedResourceMetadata {
+  resource: string;
+  authorization_servers: string[];
+  bearer_methods_supported: ["header"];
+  scopes_supported?: string[];
+  resource_documentation?: string;
+}
+
+export interface OAuthResourceServerOptions {
+  issuer: string;
+  authorizationServers?: string[];
+  resource?: string | ((c: Context) => string | Promise<string>);
+  resourceMetadataUrl?: string | ((c: Context) => string | Promise<string>);
+  requiredScopes?: string[];
+  scopesSupported?: string[];
+  serviceDocumentation?: string;
+  realm?: string;
+  validateToken: (
+    token: string,
+    c: Context
+  ) =>
+    | OAuthTokenValidationResult
+    | false
+    | null
+    | Promise<OAuthTokenValidationResult | false | null>;
 }
 
 // Lifecycle Requests

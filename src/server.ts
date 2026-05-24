@@ -2,6 +2,10 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
+import {
+  authorizeOAuthRequest,
+  createOAuthProtectedResourceMetadata,
+} from "./oauth.js";
 import type {
   JSONRPCRequest,
   JSONRPCResponse,
@@ -13,6 +17,7 @@ import type {
   ReadResourceParams,
   GetPromptParams,
   McpHonoOptions,
+  OAuthResourceServerOptions,
 } from "./types.js";
 import { JSONRPC_ERRORS, MCP_VERSION } from "./types.js";
 import { getPlaygroundHtml } from "./playground.js";
@@ -54,6 +59,7 @@ interface ActiveSession {
 
 export class McpHono extends Hono {
   private serverInfo: McpHonoOptions;
+  private oauth?: OAuthResourceServerOptions;
   private toolsRegistry = new Map<string, {
     description?: string;
     schema?: z.ZodObject<any>;
@@ -78,6 +84,7 @@ export class McpHono extends Hono {
   constructor(options: McpHonoOptions) {
     super();
     this.serverInfo = options;
+    this.oauth = options.oauth;
 
     this.setupRoutes();
   }
@@ -173,8 +180,19 @@ export class McpHono extends Hono {
    * Set up Hono routing handlers for GET and POST endpoints.
    */
   private setupRoutes() {
+    if (this.oauth) {
+      this.get("/.well-known/oauth-protected-resource", async (c) => {
+        return c.json(await createOAuthProtectedResourceMetadata(this.oauth!, c));
+      });
+    }
+
     // 1. GET Route: Server-Sent Events (SSE) or HTML Developer Playground
     this.get("/", async (c) => {
+      const oauthResponse = await this.authorizeRequest(c);
+      if (oauthResponse) {
+        return oauthResponse;
+      }
+
       const accept = c.req.header("Accept") || "";
 
       // Browser or HTML request -> serve playground
@@ -231,6 +249,11 @@ export class McpHono extends Hono {
     // 2. POST Route: Direct JSON-RPC execution
     this.post("/", async (c) => {
       try {
+        const oauthResponse = await this.authorizeRequest(c);
+        if (oauthResponse) {
+          return oauthResponse;
+        }
+
         const body = await c.req.json();
         const sessionId = c.req.header("Mcp-Session-Id") || c.req.query("sessionId") || "";
 
@@ -266,6 +289,26 @@ export class McpHono extends Hono {
         );
       }
     });
+  }
+
+  private async authorizeRequest(c: Context): Promise<Response | null> {
+    if (!this.oauth) {
+      return null;
+    }
+
+    const result = await authorizeOAuthRequest(this.oauth, c);
+    if (result.ok) {
+      return null;
+    }
+
+    c.header("WWW-Authenticate", result.wwwAuthenticate);
+    return c.json(
+      {
+        error: result.error,
+        error_description: result.errorDescription,
+      },
+      result.status
+    );
   }
 
   /**
