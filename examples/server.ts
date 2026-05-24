@@ -20,7 +20,7 @@ app.use("*", async (c, next) => {
 // 2. Initialize the Sentropic MCP-Hono instance
 const myMcp = mcp({
   name: "Sentropic Operational Hub",
-  version: "1.0.0",
+  version: "0.1.0",
   description: "Native Hono MCP server providing systems, database and weather operations",
 });
 

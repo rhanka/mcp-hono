@@ -37,14 +37,14 @@ export function getPlaygroundHtml(
     ${componentCss}
 
     :root {
-      --bg-color: var(--st-color-slate-90, #0f172a);
-      --card-bg: rgba(30, 41, 59, 0.7);
-      --glass-border: rgba(226, 232, 240, 0.08);
-      --glow-purple: rgba(37, 99, 235, 0.15);
-      --text-main: var(--st-color-slate-10, #f8fafc);
-      --text-muted: var(--st-color-slate-60, #475569);
-      --primary: var(--st-color-blue-60, oklch(50% 0.134 242.749));
-      --primary-hover: var(--st-color-cyan-50, oklch(70.4% 0.14 182.503));
+      --bg-color: var(--st-surface-subtle, #f8fafc);
+      --card-bg: var(--st-surface-raised, #ffffff);
+      --glass-border: var(--st-border-subtle, #e2e8f0);
+      --glow-purple: rgba(37, 99, 235, 0.05);
+      --text-main: var(--st-text-primary, #0f172a);
+      --text-muted: var(--st-text-secondary, #475569);
+      --primary: var(--st-action-primary, oklch(50% 0.134 242.749));
+      --primary-hover: var(--st-color-blue-80, oklch(32% 0.11 242));
       --accent-cyan: var(--st-color-cyan-50, oklch(70.4% 0.14 182.503));
       --accent-green: var(--st-color-feedback-success, #16a34a);
       --accent-red: var(--st-color-feedback-error, #dc2626);
@@ -67,29 +67,9 @@ export function getPlaygroundHtml(
       position: relative;
     }
 
-    /* Ambient Space Background Glows */
-    body::before {
-      content: '';
-      position: absolute;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
-      top: -100px;
-      left: -100px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    body::after {
-      content: '';
-      position: absolute;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
-      bottom: -100px;
-      right: -100px;
-      pointer-events: none;
-      z-index: 0;
+    /* Ambient Space Background Glows (Disabled for brand parity) */
+    body::before, body::after {
+      display: none;
     }
 
     .app-container {
@@ -103,18 +83,20 @@ export function getPlaygroundHtml(
       gap: 2rem;
     }
 
-    /* Header Styling */
+    /* Header Styling - Aligned with Design System Contract */
     header {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 1.5rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: var(--st-z-header, 50);
+      background: var(--st-surface-default, #ffffff);
+      border-bottom: 1px solid var(--st-border-subtle, #e2e8f0);
+      border-radius: 0;
+      padding: 0 2rem;
+      height: 56px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      box-shadow: var(--st-shadow-subtle, 0 1px 2px rgb(15 23 42 / 0.08));
       animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
@@ -124,27 +106,11 @@ export function getPlaygroundHtml(
       gap: 1rem;
     }
 
-    .logo-glow {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 1.5rem;
-      color: #fff;
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-    }
-
     .title-group h1 {
-      font-size: 1.6rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      background: linear-gradient(to right, #ffffff, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
+      color: var(--st-text-primary, #0f172a);
+      letter-spacing: -0.2px;
     }
 
     .title-group p {
@@ -160,11 +126,11 @@ export function getPlaygroundHtml(
     }
 
     .badge {
-      background: rgba(139, 92, 246, 0.15);
-      border: 1px solid rgba(139, 92, 246, 0.3);
-      color: var(--primary-hover);
-      padding: 0.4rem 0.8rem;
-      border-radius: 99px;
+      background: var(--st-color-slate-10, #f8fafc);
+      border: 1px solid var(--st-border-subtle, #e2e8f0);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--st-radius-pill, 999px);
       font-size: 0.8rem;
       font-weight: 600;
     }
@@ -174,7 +140,7 @@ export function getPlaygroundHtml(
       height: 8px;
       background-color: var(--accent-green);
       border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent-green);
+      box-shadow: 0 0 6px var(--accent-green);
       animation: pulse 2s infinite;
     }
 
@@ -194,13 +160,11 @@ export function getPlaygroundHtml(
     }
 
     .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
+      background: var(--st-surface-raised, #ffffff);
+      border: 1px solid var(--st-border-subtle, #e2e8f0);
+      border-radius: var(--st-radius-lg, 0.5rem);
       padding: 1.5rem;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+      box-shadow: var(--st-shadow-subtle, 0 1px 2px rgb(15 23 42 / 0.08));
     }
 
     .panel-title {
@@ -210,14 +174,16 @@ export function getPlaygroundHtml(
       display: flex;
       align-items: center;
       justify-content: space-between;
-      color: #fff;
-      border-bottom: 1px solid var(--glass-border);
+      color: var(--st-text-primary, #0f172a);
+      border-bottom: 1px solid var(--st-border-subtle, #e2e8f0);
       padding-bottom: 0.75rem;
     }
 
     .count-tag {
       font-size: 0.75rem;
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--st-color-slate-10, #f8fafc);
+      border: 1px solid var(--st-border-subtle, #e2e8f0);
+      color: var(--text-muted);
       padding: 0.2rem 0.5rem;
       border-radius: 6px;
       color: var(--text-muted);
@@ -253,15 +219,15 @@ export function getPlaygroundHtml(
     }
 
     .registry-item:hover {
-      background: rgba(139, 92, 246, 0.08);
-      border-color: rgba(139, 92, 246, 0.3);
+      background: var(--st-surface-subtle, #f8fafc);
+      border-color: var(--st-border-strong, #94a3b8);
       transform: translateX(4px);
     }
 
     .registry-item.active {
-      background: rgba(139, 92, 246, 0.15);
+      background: rgba(37, 99, 235, 0.06);
       border-color: var(--primary);
-      box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+      box-shadow: var(--st-shadow-subtle, 0 1px 2px rgb(15 23 42 / 0.08));
     }
 
     .item-header {
@@ -274,7 +240,7 @@ export function getPlaygroundHtml(
     .item-name {
       font-size: 0.95rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--st-text-primary, #0f172a);
     }
 
     .item-desc {
@@ -288,7 +254,7 @@ export function getPlaygroundHtml(
     .item-uri {
       font-family: var(--font-code);
       font-size: 0.75rem;
-      color: var(--accent-cyan);
+      color: var(--primary);
     }
 
     /* Right Main Console */
@@ -327,35 +293,35 @@ export function getPlaygroundHtml(
     }
 
     .custom-select, .custom-input {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--glass-border);
-      color: #fff;
+      background: var(--st-surface-default, #ffffff);
+      border: 1px solid var(--st-border-subtle, #e2e8f0);
+      color: var(--st-text-primary, #0f172a);
       font-family: var(--font-outfit);
       font-size: 0.95rem;
       padding: 0.85rem 1rem;
-      border-radius: 12px;
+      border-radius: var(--st-radius-md, 0.375rem);
       outline: none;
-      transition: all 0.3s;
+      transition: all 0.2s;
       width: 100%;
     }
 
     .custom-select:focus, .custom-input:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
     .btn {
-      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      background: var(--primary);
       color: #fff;
       font-family: var(--font-outfit);
       font-size: 1rem;
       font-weight: 600;
       border: none;
-      border-radius: 12px;
+      border-radius: var(--st-radius-md, 0.375rem);
       padding: 1rem 2rem;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: var(--st-shadow-subtle, 0 1px 2px rgb(15 23 42 / 0.08));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -363,9 +329,9 @@ export function getPlaygroundHtml(
     }
 
     .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
-      background: linear-gradient(135deg, var(--primary-hover), var(--primary));
+      transform: translateY(-1px);
+      box-shadow: var(--st-shadow-medium, 0 8px 24px rgb(15 23 42 / 0.12));
+      background: var(--primary-hover);
     }
 
     .btn:active {
@@ -373,7 +339,7 @@ export function getPlaygroundHtml(
     }
 
     .btn:disabled {
-      background: var(--glass-border);
+      background: var(--st-surface-subtle, #f8fafc);
       color: var(--text-muted);
       cursor: not-allowed;
       box-shadow: none;
@@ -523,27 +489,25 @@ export function getPlaygroundHtml(
 </head>
 <body>
 
+  <!-- Header -->
+  <header>
+    <div class="brand-section">
+      <div class="title-group">
+        <span style="font-weight: 700; font-size: 1.1rem; color: var(--st-text-primary, #0f172a); letter-spacing: -0.2px;">Sentropic MCP Console</span>
+      </div>
+    </div>
+    <div class="server-badge">
+      <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--st-color-slate-10, #f8fafc); border: 1px solid var(--st-border-subtle, #e2e8f0); padding: 0.25rem 0.6rem; border-radius: 8px;">
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px;">ENDPOINT:</span>
+        <input type="text" id="server-url-input" style="background: transparent; border: none; color: var(--text-main); font-family: var(--font-code); font-size: 0.75rem; width: 220px; outline: none; border-bottom: 1px solid transparent; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='transparent'" value="" placeholder="http://localhost:3000/mcp">
+      </div>
+      <div class="status-dot"></div>
+      <span class="badge" style="background: var(--st-color-slate-10, #f8fafc); border-color: var(--st-border-subtle, #e2e8f0); color: var(--text-muted);">v${info.version}</span>
+      <span class="badge" style="background: rgba(37, 99, 235, 0.08); border-color: rgba(37, 99, 235, 0.2); color: var(--primary);">Streamable HTTP</span>
+    </div>
+  </header>
+
   <div class="app-container">
-    
-    <!-- Header -->
-    <header>
-      <div class="brand-section">
-        <div class="logo-glow">⚡</div>
-        <div class="title-group">
-          <h1>${info.name}</h1>
-          <p>${info.description || 'Native Hono Model Context Protocol Server'}</p>
-        </div>
-      </div>
-      <div class="server-badge">
-        <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.25rem 0.6rem; border-radius: 8px;">
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px;">ENDPOINT:</span>
-          <input type="text" id="server-url-input" style="background: transparent; border: none; color: #fff; font-family: var(--font-code); font-size: 0.75rem; width: 220px; outline: none; border-bottom: 1px solid transparent; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='transparent'" value="" placeholder="http://localhost:3000/mcp">
-        </div>
-        <div class="status-dot"></div>
-        <span class="badge">v${info.version}</span>
-        <span class="badge" style="background: rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.3); color: var(--accent-cyan);">Streamable HTTP</span>
-      </div>
-    </header>
 
     <!-- Main Dashboard Split -->
     <div class="dashboard-grid">
