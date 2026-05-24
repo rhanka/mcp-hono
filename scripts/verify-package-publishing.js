@@ -28,7 +28,14 @@ const checks = [
   },
   {
     name: "publish workflow uses npm trusted publishing path",
-    pass: /npm publish/.test(workflowText) && !/NODE_AUTH_TOKEN/.test(workflowText),
+    pass:
+      /npm publish/.test(workflowText) &&
+      !/NODE_AUTH_TOKEN/.test(workflowText) &&
+      !/registry-url:/.test(workflowText),
+  },
+  {
+    name: "publish workflow uses npm trusted publishing capable cli",
+    pass: /npm install -g npm@\^11\.14\.0/.test(workflowText),
   },
   {
     name: "publish workflow runs build and pack dry-run before publishing",
