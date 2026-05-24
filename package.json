@@ -1,6 +1,6 @@
 {
   "name": "@sentropic/mcp-hono",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Web-native, zero-dependency, and edge-ready Model Context Protocol (MCP) framework for Hono",
   "author": "rhk <fabien.antoine@gmail.com>",
   "repository": {
