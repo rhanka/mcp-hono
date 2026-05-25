@@ -172,6 +172,7 @@ Registers a tool.
 * `name`: Tool name.
 * `description`: Optional description.
 * `schema`: Optional Zod object schema for argument validation.
+* `inputSchema`: Optional precomputed JSON Schema published in `tools/list`. When provided, it takes precedence over the internal Zod-to-JSON-Schema conversion while `schema` still controls runtime validation.
 * `handler(args, c)`: Function executed when tool is called. Receives the validated arguments and Hono's Context `c`.
 
 ### `.resource(options)`

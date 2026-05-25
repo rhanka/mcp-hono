@@ -138,15 +138,17 @@ export interface InitializeResult {
 }
 
 // Tool Types
+export interface ToolInputSchema {
+  type?: string | string[];
+  properties?: Record<string, any>;
+  required?: string[];
+  [key: string]: any;
+}
+
 export interface ToolDefinition {
   name: string;
   description?: string;
-  inputSchema: {
-    type: "object";
-    properties?: Record<string, any>;
-    required?: string[];
-    [key: string]: any;
-  };
+  inputSchema: ToolInputSchema;
 }
 
 export interface CallToolParams {

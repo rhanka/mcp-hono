@@ -11,6 +11,7 @@ import type {
   JSONRPCResponse,
   JSONRPCId,
   ToolDefinition,
+  ToolInputSchema,
   ResourceDefinition,
   PromptDefinition,
   CallToolParams,
@@ -26,6 +27,7 @@ export interface ToolRegistration<TSchema extends z.ZodObject<any> | undefined =
   name: string;
   description?: string;
   schema?: TSchema;
+  inputSchema?: ToolInputSchema;
   handler: (
     args: TSchema extends z.ZodObject<any> ? z.infer<TSchema> : Record<string, any>,
     c: Context
@@ -63,6 +65,7 @@ export class McpHono extends Hono {
   private toolsRegistry = new Map<string, {
     description?: string;
     schema?: z.ZodObject<any>;
+    inputSchema?: ToolInputSchema;
     handler: (args: any, c: Context) => Promise<any> | any;
   }>();
 
@@ -98,6 +101,7 @@ export class McpHono extends Hono {
     this.toolsRegistry.set(options.name, {
       description: options.description,
       schema: options.schema as z.ZodObject<any> | undefined,
+      inputSchema: options.inputSchema,
       handler: options.handler,
     });
     return this;
@@ -137,9 +141,9 @@ export class McpHono extends Hono {
       list.push({
         name,
         description: tool.description,
-        inputSchema: tool.schema
+        inputSchema: tool.inputSchema ?? (tool.schema
           ? this.zodToJsonSchema(tool.schema)
-          : { type: "object", properties: {} },
+          : { type: "object", properties: {} }),
       });
     }
     return list;
@@ -601,18 +605,31 @@ export class McpHono extends Hono {
    * Web-Native lightweight Zod to JSON Schema converter.
    * Eliminates the need for external large packages.
    */
-  private zodToJsonSchema(schema: z.ZodObject<any>): any {
+  private zodToJsonSchema(schema: z.ZodObject<any>): ToolInputSchema {
+    const toJSONSchema = (z as any).toJSONSchema;
+    if (typeof toJSONSchema === "function") {
+      try {
+        return toJSONSchema(schema, { target: "draft-7" });
+      } catch {
+        return this.zodObjectToJsonSchema(schema);
+      }
+    }
+
+    return this.zodObjectToJsonSchema(schema);
+  }
+
+  private zodObjectToJsonSchema(schema: z.ZodObject<any>): ToolInputSchema {
     const properties: Record<string, any> = {};
     const required: string[] = [];
 
-    const shape = schema.shape;
+    const shape = this.getZodObjectShape(schema);
     for (const [key, value] of Object.entries(shape)) {
       const zodType = value as z.ZodTypeAny;
       const jsonType = this.parseZodType(zodType);
       if (jsonType) {
         properties[key] = jsonType;
       }
-      if (!zodType.isOptional()) {
+      if (!this.isZodOptional(zodType)) {
         required.push(key);
       }
     }
@@ -631,39 +648,38 @@ export class McpHono extends Hono {
       typeInfo.description = zodType.description;
     }
 
-    let currentType = zodType;
-    while (
-      currentType._def &&
-      ((currentType._def as any).typeName === "ZodOptional" ||
-        (currentType._def as any).typeName === "ZodNullable")
-    ) {
-      currentType = (currentType._def as any).innerType;
-    }
-
-    const typeName = (currentType._def as any)?.typeName;
+    const currentType = this.unwrapZodType(zodType);
+    const def = this.getZodDef(currentType);
+    const typeName = def?.typeName ?? def?.type;
 
     switch (typeName) {
       case "ZodString":
+      case "string":
         typeInfo.type = "string";
         break;
       case "ZodNumber":
-        typeInfo.type = "number";
+      case "number":
+        typeInfo.type = this.isZodInteger(currentType, def) ? "integer" : "number";
         break;
       case "ZodBoolean":
+      case "boolean":
         typeInfo.type = "boolean";
         break;
       case "ZodEnum":
+      case "enum":
         typeInfo.type = "string";
-        typeInfo.enum = (currentType._def as any).values;
+        typeInfo.enum = this.getZodEnumValues(def);
         break;
       case "ZodArray":
+      case "array":
         typeInfo.type = "array";
-        typeInfo.items = this.parseZodType((currentType._def as any).type);
+        typeInfo.items = this.parseZodType(def.element ?? def.type);
         break;
       case "ZodObject":
+      case "object":
         typeInfo = {
           ...typeInfo,
-          ...this.zodToJsonSchema(currentType as z.ZodObject<any>),
+          ...this.zodObjectToJsonSchema(currentType as z.ZodObject<any>),
         };
         break;
       default:
@@ -671,5 +687,77 @@ export class McpHono extends Hono {
     }
 
     return typeInfo;
+  }
+
+  private getZodObjectShape(schema: z.ZodObject<any>): Record<string, any> {
+    const def = this.getZodDef(schema);
+    const shape = (schema as any).shape ?? def?.shape;
+    return typeof shape === "function" ? shape() : shape ?? {};
+  }
+
+  private getZodDef(zodType: any): any {
+    return zodType?._def ?? zodType?._zod?.def ?? zodType?.def;
+  }
+
+  private unwrapZodType(zodType: z.ZodTypeAny): any {
+    let currentType: any = zodType;
+
+    while (true) {
+      const def = this.getZodDef(currentType);
+      const typeName = def?.typeName ?? def?.type;
+      if (
+        typeName !== "ZodOptional" &&
+        typeName !== "ZodNullable" &&
+        typeName !== "optional" &&
+        typeName !== "nullable"
+      ) {
+        return currentType;
+      }
+      currentType = def.innerType;
+    }
+  }
+
+  private isZodOptional(zodType: z.ZodTypeAny): boolean {
+    if (typeof (zodType as any).isOptional === "function" && (zodType as any).isOptional()) {
+      return true;
+    }
+
+    const def = this.getZodDef(zodType);
+    const typeName = def?.typeName ?? def?.type;
+    return typeName === "ZodOptional" || typeName === "optional";
+  }
+
+  private getZodEnumValues(def: any): string[] {
+    if (Array.isArray(def?.values)) {
+      return def.values;
+    }
+
+    if (def?.entries) {
+      return Object.values(def.entries);
+    }
+
+    return [];
+  }
+
+  private isZodInteger(zodType: any, def: any): boolean {
+    if (zodType?.isInt === true || ["safeint", "int32", "int64"].includes(zodType?.format)) {
+      return true;
+    }
+
+    if (!Array.isArray(def?.checks)) {
+      return false;
+    }
+
+    return def.checks.some((check: any) => {
+      const checkDef = check?.def ?? check?._zod?.def ?? check;
+      return (
+        check?.kind === "int" ||
+        checkDef?.kind === "int" ||
+        check?.isInt === true ||
+        ["safeint", "int32", "int64"].includes(check?.format) ||
+        (checkDef?.check === "number_format" &&
+          ["safeint", "int32", "int64"].includes(checkDef?.format))
+      );
+    });
   }
 }
