@@ -1,6 +1,7 @@
 {
   "name": "@sentropic/mcp-hono",
-  "version": "0.1.6",
+  "version": "0.1.7",
+  "deprecated": "Package retired: use @hono/mcp instead. @sentropic/mcp-hono is archived and unsupported.",
   "license": "MIT",
   "description": "Web-native, zero-dependency, and edge-ready Model Context Protocol (MCP) framework for Hono",
   "author": "rhk <fabien.antoine@gmail.com>",

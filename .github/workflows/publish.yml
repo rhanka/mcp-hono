@@ -1,4 +1,4 @@
-name: Retire Package
+name: Publish Package
 
 on:
   workflow_dispatch:
@@ -8,8 +8,8 @@ permissions:
   id-token: write
 
 jobs:
-  retire:
-    name: Retire npm package
+  publish:
+    name: Publish retired package to npm
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,122 +20,17 @@ jobs:
         with:
           node-version: 24
 
-      - name: Unpublish or deprecate on npm
-        run: |
-          node <<'NODE'
-          const packageName = "@sentropic/mcp-hono";
-          const escapedPackageName = "@sentropic%2Fmcp-hono";
-          const registry = "https://registry.npmjs.org/";
-          const message = "Package retired: use @hono/mcp instead. @sentropic/mcp-hono is archived and unsupported.";
+      - name: Use npm with trusted publishing support
+        run: npm install -g npm@^11.14.0
 
-          async function readJson(response) {
-            const text = await response.text();
-            try {
-              return text ? JSON.parse(text) : {};
-            } catch {
-              return { raw: text };
-            }
-          }
+      - name: Install dependencies
+        run: npm ci
 
-          async function assertOk(response, label) {
-            if (response.ok) {
-              return;
-            }
-            const body = await readJson(response);
-            throw new Error(`${label} failed: ${response.status} ${JSON.stringify(body)}`);
-          }
+      - name: Build
+        run: npm run build
 
-          const searchUrl = `${registry}-/v1/search?text=%22%40sentropic%2Fmcp-hono%22&size=5`;
-          const searchResponse = await fetch(searchUrl, { headers: { Accept: "application/json" } });
-          await assertOk(searchResponse, "npm search");
-          const search = await readJson(searchResponse);
-          const entry = search.objects?.find((object) => object.package?.name === packageName);
-          if (!entry) {
-            console.log(`${packageName} is already absent from npm search.`);
-            process.exit(0);
-          }
+      - name: Verify package contents
+        run: npm pack --dry-run
 
-          const dependents = Number(entry.dependents ?? 0);
-          console.log(`${packageName} dependents=${dependents}`);
-          if (dependents !== 0) {
-            throw new Error(`Refusing to unpublish because dependents=${dependents}`);
-          }
-
-          if (!process.env.ACTIONS_ID_TOKEN_REQUEST_URL || !process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN) {
-            throw new Error("GitHub Actions OIDC environment is missing");
-          }
-
-          const oidcUrl = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
-          oidcUrl.searchParams.append("audience", "npm:registry.npmjs.org");
-          const oidcResponse = await fetch(oidcUrl, {
-            headers: {
-              Accept: "application/json",
-              Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`,
-            },
-          });
-          await assertOk(oidcResponse, "GitHub OIDC token request");
-          const oidc = await readJson(oidcResponse);
-          if (!oidc.value) {
-            throw new Error("GitHub OIDC response did not include a token value");
-          }
-
-          const exchangeResponse = await fetch(
-            `${registry}-/npm/v1/oidc/token/exchange/package/${escapedPackageName}`,
-            {
-              method: "POST",
-              headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${oidc.value}`,
-              },
-            }
-          );
-          await assertOk(exchangeResponse, "npm OIDC token exchange");
-          const exchanged = await readJson(exchangeResponse);
-          if (!exchanged.token) {
-            throw new Error("npm OIDC exchange did not return a registry token");
-          }
-
-          const authHeaders = {
-            Accept: "application/json",
-            Authorization: `Bearer ${exchanged.token}`,
-          };
-
-          const packumentUrl = `${registry}${escapedPackageName}`;
-          const packumentResponse = await fetch(`${packumentUrl}?write=true`, { headers: authHeaders });
-          if (packumentResponse.status === 404) {
-            console.log(`${packageName} is already unpublished.`);
-            process.exit(0);
-          }
-          await assertOk(packumentResponse, "npm packument fetch");
-          const packument = await readJson(packumentResponse);
-
-          const deleteResponse = await fetch(`${packumentUrl}/-rev/${packument._rev}`, {
-            method: "DELETE",
-            headers: authHeaders,
-          });
-          if (deleteResponse.ok) {
-            console.log(`${packageName} unpublished from npm.`);
-            process.exit(0);
-          }
-
-          const deleteBody = await readJson(deleteResponse);
-          console.log(`Unpublish failed: ${deleteResponse.status} ${JSON.stringify(deleteBody)}. Deprecating all versions instead.`);
-
-          for (const version of Object.keys(packument.versions ?? {})) {
-            packument.versions[version].deprecated = message;
-          }
-
-          delete packument._revisions;
-          delete packument._attachments;
-
-          const deprecateResponse = await fetch(packumentUrl, {
-            method: "PUT",
-            headers: {
-              ...authHeaders,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(packument),
-          });
-          await assertOk(deprecateResponse, "npm deprecate fallback");
-          console.log(`${packageName} deprecated on npm.`);
-          NODE
+      - name: Publish
+        run: npm publish --access public --provenance
