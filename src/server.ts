@@ -427,7 +427,7 @@ export class McpHono extends Hono {
         return this.createErrorResponse(
           id,
           JSONRPC_ERRORS.INVALID_PARAMS,
-          `Invalid arguments: ${parsed.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+          `Invalid arguments: ${parsed.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
         );
       }
       args = parsed.data;
@@ -617,13 +617,13 @@ export class McpHono extends Hono {
     let currentType = zodType;
     while (
       currentType._def &&
-      (currentType._def.typeName === "ZodOptional" ||
-        currentType._def.typeName === "ZodNullable")
+      ((currentType._def as any).typeName === "ZodOptional" ||
+        (currentType._def as any).typeName === "ZodNullable")
     ) {
-      currentType = currentType._def.innerType;
+      currentType = (currentType._def as any).innerType;
     }
 
-    const typeName = currentType._def?.typeName;
+    const typeName = (currentType._def as any)?.typeName;
 
     switch (typeName) {
       case "ZodString":
@@ -637,11 +637,11 @@ export class McpHono extends Hono {
         break;
       case "ZodEnum":
         typeInfo.type = "string";
-        typeInfo.enum = currentType._def.values;
+        typeInfo.enum = (currentType._def as any).values;
         break;
       case "ZodArray":
         typeInfo.type = "array";
-        typeInfo.items = this.parseZodType(currentType._def.type);
+        typeInfo.items = this.parseZodType((currentType._def as any).type);
         break;
       case "ZodObject":
         typeInfo = {
