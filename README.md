@@ -1,16 +1,16 @@
 # `@sentropic/mcp-hono`
 
-> **⚡ Web-Native, Zero-Dependency, and Edge-Ready Model Context Protocol (MCP) Framework for Hono.**
+> **⚡ Web-Native, MCP-SDK-Free, and Edge-Ready Model Context Protocol (MCP) Framework for Hono.**
 
 `@sentropic/mcp-hono` is a next-generation Model Context Protocol (MCP) server framework built from the ground up to integrate perfectly with **Hono**. 
 
-Unlike standard MCP implementations (which act as heavy Node-only wrappers), `@sentropic/mcp-hono` is ultra-lightweight (under 10KB), utilizes standard Fetch Web APIs (Request/Response/SSE), runs seamlessly on edge runtimes (like Cloudflare Workers, Bun, Deno, Vercel), and lets you write highly type-safe tool handlers using Zod.
+Unlike standard MCP implementations (which act as heavy Node-only wrappers), `@sentropic/mcp-hono` keeps a small runtime footprint, uses standard Fetch Web APIs (Request/Response/SSE), runs seamlessly on edge runtimes (like Cloudflare Workers, Bun, Deno, Vercel), and lets you write highly type-safe tool handlers using Zod.
 
 ---
 
 ## 🌟 Key Features
 
-* **Zero Heavy Dependencies**: Completely independent of `@modelcontextprotocol/sdk`. Zero Node.js polyfills needed.
+* **No MCP SDK Runtime Dependency**: Completely independent of `@modelcontextprotocol/sdk`. Zero Node.js polyfills needed.
 * **Edge-First & Serverless-Ready**: Runs anywhere Hono runs—Cloudflare Workers, Bun, Deno, Vercel, Node.js.
 * **Hono-Idiomatic Integration**: Mounts cleanly via `app.route('/mcp', mcpApp)`.
 * **Full Context Access (The Game-Changer)**: Direct access to Hono's `Context` (`c`) inside your tools. Seamlessly read environment bindings, request headers, database clients, or authentication data!
