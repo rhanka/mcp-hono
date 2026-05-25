@@ -1,5 +1,7 @@
 # `@sentropic/mcp-hono`
 
+> **Deprecated and archived.** Use [`@hono/mcp`](https://www.npmjs.com/package/@hono/mcp) instead. This package is no longer maintained and may be removed from npm.
+
 > **⚡ Web-Native, MCP-SDK-Free, and Edge-Ready Model Context Protocol (MCP) Framework for Hono.**
 
 `@sentropic/mcp-hono` is a next-generation Model Context Protocol (MCP) server framework built from the ground up to integrate perfectly with **Hono**. 
