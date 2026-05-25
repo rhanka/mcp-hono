@@ -19,7 +19,7 @@ import type {
   McpHonoOptions,
   OAuthResourceServerOptions,
 } from "./types.js";
-import { JSONRPC_ERRORS, MCP_VERSION } from "./types.js";
+import { JSONRPC_ERRORS, MCP_VERSION, SUPPORTED_MCP_PROTOCOL_VERSIONS } from "./types.js";
 import { getPlaygroundHtml } from "./playground.js";
 
 export interface ToolRegistration<TSchema extends z.ZodObject<any> | undefined = undefined> {
@@ -242,6 +242,8 @@ export class McpHono extends Hono {
         name: this.serverInfo.name,
         version: this.serverInfo.version,
         description: this.serverInfo.description,
+        protocolVersion: MCP_VERSION,
+        supportedProtocolVersions: SUPPORTED_MCP_PROTOCOL_VERSIONS,
         supportedTransports: ["Streamable HTTP", "SSE"],
       });
     });
@@ -333,7 +335,7 @@ export class McpHono extends Hono {
       switch (method) {
         case "initialize":
           return this.createSuccessResponse(id, {
-            protocolVersion: MCP_VERSION,
+            protocolVersion: this.negotiateProtocolVersion(params),
             capabilities: {
               tools: { listChanged: false },
               resources: { subscribe: false, listChanged: false },
@@ -501,6 +503,21 @@ export class McpHono extends Hono {
         `Error reading resource: ${err.message}`
       );
     }
+  }
+
+  private negotiateProtocolVersion(params: any): string {
+    const requestedVersion = params?.protocolVersion;
+
+    if (
+      typeof requestedVersion === "string" &&
+      SUPPORTED_MCP_PROTOCOL_VERSIONS.includes(
+        requestedVersion as (typeof SUPPORTED_MCP_PROTOCOL_VERSIONS)[number]
+      )
+    ) {
+      return requestedVersion;
+    }
+
+    return MCP_VERSION;
   }
 
   /**

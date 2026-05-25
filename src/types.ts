@@ -51,8 +51,13 @@ export const JSONRPC_ERRORS = {
   INTERNAL_ERROR: -32603,
 } as const;
 
-// MCP Protocol Version
-export const MCP_VERSION = "2024-11-05";
+// MCP Protocol Versions
+export const MCP_VERSION = "2025-06-18";
+export const SUPPORTED_MCP_PROTOCOL_VERSIONS = [
+  "2024-11-05",
+  "2025-03-26",
+  "2025-06-18",
+] as const;
 
 // MCP Hono Server Options
 export interface McpHonoOptions {

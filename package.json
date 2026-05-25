@@ -33,9 +33,10 @@
   ],
   "scripts": {
     "build": "tsc && node scripts/build-playground.js",
-    "test": "node scripts/verify-playground-design-system.js && node scripts/verify-package-publishing.js && node scripts/verify-oauth-resource-server.js",
+    "test": "node scripts/verify-playground-design-system.js && node scripts/verify-package-publishing.js && node scripts/verify-oauth-resource-server.js && node scripts/verify-protocol-negotiation.js",
     "test:design": "node scripts/verify-playground-design-system.js",
     "test:oauth": "node scripts/verify-oauth-resource-server.js",
+    "test:protocol": "node scripts/verify-protocol-negotiation.js",
     "test:publish": "node scripts/verify-package-publishing.js",
     "prepublishOnly": "npm run build"
   },

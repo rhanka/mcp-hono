@@ -15,6 +15,7 @@ Unlike standard MCP implementations (which act as heavy Node-only wrappers), `@s
 * **Hono-Idiomatic Integration**: Mounts cleanly via `app.route('/mcp', mcpApp)`.
 * **Full Context Access (The Game-Changer)**: Direct access to Hono's `Context` (`c`) inside your tools. Seamlessly read environment bindings, request headers, database clients, or authentication data!
 * **OAuth Resource Server Built-In**: Protect MCP HTTP/SSE endpoints with Bearer tokens, publish protected-resource metadata, and expose validated auth context to handlers.
+* **Modern MCP Negotiation**: Supports `2024-11-05`, `2025-03-26`, and `2025-06-18`, echoing the client's supported version during `initialize`.
 * **Autonomic Type Safety**: Define schemas using `Zod` to automatically type and validate arguments.
 * **Premium Developer Playground**: Visiting your MCP endpoint in a browser (`GET /mcp`) renders a gorgeous, interactive dark-mode dashboard to test your tools in real-time.
 * **Stdio-to-HTTP dev bridge (`npx @sentropic/mcp-hono dev`)**: Simple local development bridge to hook your Hono server into local desktop clients (like Claude Desktop) without polluting your production code with Stdio logic.
