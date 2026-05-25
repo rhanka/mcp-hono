@@ -41,6 +41,10 @@ const checks = [
     name: "publish workflow runs build and pack dry-run before publishing",
     pass: /npm run build/.test(workflowText) && /npm pack --dry-run/.test(workflowText),
   },
+  {
+    name: "publish workflow uses Node 24 compatible GitHub actions",
+    pass: /actions\/checkout@v6/.test(workflowText) && /actions\/setup-node@v6/.test(workflowText),
+  },
 ];
 
 const failures = checks.filter((check) => !check.pass);
